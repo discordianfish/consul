@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -21,6 +22,7 @@ import (
 	"github.com/hashicorp/logutils"
 	scada "github.com/hashicorp/scada-client"
 	"github.com/mitchellh/cli"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 // gracefulTimeout controls how long we wait before forcefully terminating
@@ -589,6 +591,23 @@ func (c *Command) Run(args []string) int {
 		fanout = append(fanout, sink)
 	}
 
+	// Configure the prometheus sink
+	if config.PrometheusAddr != "" {
+		sink, err := metrics.NewPrometheusSink()
+		if err != nil {
+			c.Ui.Error(fmt.Sprintf("Failed to start prometheus sink. Got: %s", err))
+			return 1
+		}
+		fanout = append(fanout, sink)
+		go func() {
+			err := http.ListenAndServe(config.PrometheusAddr, prometheus.Handler())
+			if err != nil {
+				c.Ui.Error(fmt.Sprintf("Failed to serve prometheus metrics: %s", err))
+			}
+		}()
+
+		//		http.Handle("/metrics", prometheus.Handler())
+	}
 	// Initialize the global sink
 	if len(fanout) > 0 {
 		fanout = append(fanout, inm)

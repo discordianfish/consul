@@ -167,6 +167,9 @@ type Config struct {
 	// Protocol is the Consul protocol version to use.
 	Protocol int `mapstructure:"protocol"`
 
+	// Address to provide Prometheus metrics on.
+	PrometheusAddr string `mapstructure:"prometheus_addr"`
+
 	// EnableDebug is used to enable various debugging features
 	EnableDebug bool `mapstructure:"enable_debug"`
 
@@ -969,6 +972,9 @@ func MergeConfig(a, b *Config) *Config {
 	}
 	if b.AtlasJoin {
 		result.AtlasJoin = true
+	}
+	if b.PrometheusAddr != "" {
+		result.PrometheusAddr = b.PrometheusAddr
 	}
 
 	if len(b.HTTPAPIResponseHeaders) != 0 {
