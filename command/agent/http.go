@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/consul/consul/structs"
 	"github.com/hashicorp/consul/tlsutil"
 	"github.com/mitchellh/mapstructure"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 var (
@@ -142,6 +143,15 @@ func NewHTTPServers(agent *Agent, config *Config, logOutput io.Writer) ([]*HTTPS
 		servers = append(servers, srv)
 	}
 
+	if config.Telemetry.PrometheusAddr != "" {
+		mux := http.NewServeMux()
+		mux.Handle(config.Telemetry.PrometheusPath, prometheus.Handler())
+		go func() {
+			if err := http.ListenAndServe(config.Telemetry.PrometheusAddr, mux); err != nil {
+				log.Println("Failed setting up Prometheus endpoint:", err)
+			}
+		}()
+	}
 	return servers, nil
 }
 

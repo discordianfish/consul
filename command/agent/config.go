@@ -130,6 +130,12 @@ type Telemetry struct {
 	// DogStatsdTags are the global tags that should be sent with each packet to dogstatsd
 	// It is a list of strings, where each string looks like "my_tag_name:my_tag_value"
 	DogStatsdTags []string `mapstructure:"dogstatsd_tags"`
+
+	// PrometheusPath is the path under which to expose Prometheus metrics.
+	PrometheusPath string `mapstructure:"prometheus_path"`
+
+	// PrometheusAddr is the address under which to expose Prometheus metrics.
+	PrometheusAddr string `mapstructure:"prometheus_addr"`
 }
 
 // Config is the configuration that can be set for an Agent.
@@ -556,6 +562,7 @@ func DefaultConfig() *Config {
 		},
 		Telemetry: Telemetry{
 			StatsitePrefix: "consul",
+			PrometheusPath: "/metrics",
 		},
 		SyslogFacility:      "LOCAL0",
 		Protocol:            consul.ProtocolVersion2Compatible,
@@ -1070,6 +1077,12 @@ func MergeConfig(a, b *Config) *Config {
 	}
 	if b.Telemetry.DogStatsdTags != nil {
 		result.Telemetry.DogStatsdTags = b.Telemetry.DogStatsdTags
+	}
+	if b.Telemetry.PrometheusPath != "" {
+		result.Telemetry.PrometheusPath = b.Telemetry.PrometheusPath
+	}
+	if b.Telemetry.PrometheusAddr != "" {
+		result.Telemetry.PrometheusAddr = b.Telemetry.PrometheusAddr
 	}
 	if b.EnableDebug {
 		result.EnableDebug = true

@@ -15,6 +15,7 @@ import (
 
 	"github.com/armon/go-metrics"
 	"github.com/armon/go-metrics/datadog"
+	"github.com/armon/go-metrics/prometheus"
 	"github.com/hashicorp/consul/lib"
 	"github.com/hashicorp/consul/watch"
 	"github.com/hashicorp/go-checkpoint"
@@ -697,6 +698,16 @@ func (c *Command) Run(args []string) int {
 			return 1
 		}
 		sink.SetTags(tags)
+		fanout = append(fanout, sink)
+	}
+
+	// Configure the Prometheus sink
+	if config.Telemetry.PrometheusAddr != "" {
+		sink, err := prometheus.NewPrometheusSink()
+		if err != nil {
+			c.Ui.Error(fmt.Sprintf("Failed to start Prometheus sink. Got: %s", err))
+			return 1
+		}
 		fanout = append(fanout, sink)
 	}
 
